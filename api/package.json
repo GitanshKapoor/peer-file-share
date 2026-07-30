@@ -2,7 +2,7 @@
   "name": "pfs-api",
   "version": "1.0.0",
   "description": "PFS - Peer File Share: Azure Functions v4 API",
-  "main": "src/index.js",
+  "main": "src/*/*.js",
   "scripts": {
     "start": "func start",
     "build": "echo 'No build step required'"
