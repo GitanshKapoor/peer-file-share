@@ -41,15 +41,6 @@ const uploadAnotherBtn = document.getElementById('uploadAnotherBtn');
 const errorMessage   = document.getElementById('errorMessage');
 const errorDismiss   = document.getElementById('errorDismiss');
 
-const previewCard        = document.getElementById('previewCard');
-const previewExpiry      = document.getElementById('previewExpiry');
-const previewMediaContainer = document.getElementById('previewMediaContainer');
-const previewPlaceholder = document.getElementById('previewPlaceholder');
-const previewLargeIcon   = document.getElementById('previewLargeIcon');
-const previewFilename    = document.getElementById('previewFilename');
-const previewFilesize    = document.getElementById('previewFilesize');
-const downloadBtn        = document.getElementById('downloadBtn');
-const previewUploadBtn   = document.getElementById('previewUploadBtn');
 const uploadCard         = document.querySelector('.upload-card');
 const heroSection        = document.querySelector('.hero');
 
@@ -203,14 +194,14 @@ async function handleFile(file) {
     // ── Step 2: Upload file directly to Blob Storage via SAS URL ────────
     await uploadWithProgress(file, uploadUrl);
 
-    // ── Step 3: Show success ─────────────────────────────────────────────
+    // ── Step 3: Show Success UI ─────────────────────────────────────────
     const hoursLeft = hoursUntil(expiresAt);
-    const expiryText = hoursLeft > 48
+    
+    shareLinkInput.value = localShareUrl;
+    successExpiry.textContent = hoursLeft > 48
       ? `Link expires in ${Math.floor(hoursLeft / 24)} days`
       : `Link expires in ${hoursLeft} hours`;
-
-    shareLinkInput.value = localShareUrl;
-    successExpiry.textContent = expiryText;
+      
     showPanel(successPanel);
 
   } catch (err) {
@@ -255,6 +246,8 @@ function uploadWithProgress(file, sasUrl) {
     // Required Azure Blob Storage headers
     xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    // Force browser to download the file instead of displaying it inline
+    xhr.setRequestHeader('x-ms-blob-content-disposition', `attachment; filename="${encodeURIComponent(file.name)}"`);
     // Store original filename as blob metadata (fetched by getFileList)
     xhr.setRequestHeader('x-ms-meta-originalname', encodeURIComponent(file.name));
     xhr.send(file);
@@ -265,93 +258,11 @@ function uploadWithProgress(file, sasUrl) {
 function resetUploadUI() {
   showPanel(null);
   dropZone.style.display = '';
-  setProgress(0, '');
   fileInput.value = '';
 }
 
 // ── Preview & Download ───────────────────────────────────────────────────────
-
-async function initPreview() {
-  const params = new URLSearchParams(window.location.search);
-  const blobName = params.get('file');
-  if (!blobName) return;
-
-  // Hide main upload UI
-  uploadCard.style.display = 'none';
-  heroSection.style.display = 'none';
-
-  try {
-    const res = await fetch(`${API_BASE}/getFileList`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const { files } = await res.json();
-    
-    const file = files.find(f => f.blobName === blobName);
-    
-    if (!file) {
-      showError("This file does not exist or has expired.");
-      return;
-    }
-
-    // Show preview card
-    previewCard.classList.add('visible');
-    previewFilename.textContent = file.originalName;
-    previewFilesize.textContent = formatBytes(file.size);
-    
-    const hours = hoursUntil(file.expiresAt);
-    previewExpiry.textContent = hours > 48 
-      ? `Expires in ${Math.floor(hours / 24)} days` 
-      : `Expires in ${hours} hours`;
-
-    // Render Image Preview if applicable
-    if (file.contentType.startsWith('image/')) {
-      previewPlaceholder.style.display = 'none';
-      
-      const img = document.createElement('img');
-      img.src = file.shareUrl;
-      img.className = 'preview-image';
-      previewMediaContainer.appendChild(img);
-    } else {
-      previewLargeIcon.setAttribute('data-lucide', getFileIcon(file.contentType));
-    }
-
-    // Download Action
-    downloadBtn.onclick = () => {
-      downloadBtn.innerHTML = '<i data-lucide="loader" class="spinning"></i> <span>Downloading...</span>';
-      lucide.createIcons();
-      forceDownload(file.shareUrl, file.originalName).finally(() => {
-        downloadBtn.innerHTML = '<i data-lucide="download"></i> <span>Download File</span>';
-        lucide.createIcons();
-      });
-    };
-
-    previewUploadBtn.onclick = () => {
-      window.location.href = '/';
-    };
-
-  } catch (err) {
-    console.error('Failed to load file details:', err);
-    showError(`Failed to load file details: ${err.message}`);
-  }
-}
-
-async function forceDownload(url, filename) {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Download failed');
-    const blob = await res.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  } catch (err) {
-    showError('Could not download file: ' + err.message);
-  }
-}
-
-// (Removed initPreviewMode as it's merged into initPreview above)
+// Removed as per user request to auto-download via raw Azure URL.
 
 // ── Event Listeners ──────────────────────────────────────────────────────────
 
@@ -404,4 +315,3 @@ uploadAnotherBtn.addEventListener('click', () => {
 errorDismiss.addEventListener('click', hideError);
 
 // ── Initialise ───────────────────────────────────────────────────────────────
-initPreview();
