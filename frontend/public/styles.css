@@ -538,10 +538,85 @@ body {
   opacity: 0.7; transition: opacity 0.15s;
 }
 .error-dismiss:hover { opacity: 1; }
-.error-dismiss svg { width: 16px; height: 16px; }
+.error-dismiss svg {  color: var(--error);
+  font-weight: 500;
+}
 
-/* ── Recent Files ────────────────────────────────────────────── */
-.recent-section { position: relative; z-index: 1; }
+/* ── Preview Card ──────────────────────────────────────────────────────── */
+.preview-card {
+  text-align: center;
+  padding: 40px 32px;
+}
+.preview-card.visible { display: block; animation: slideUp 0.3s ease-out; }
+
+.preview-header { margin-bottom: 24px; }
+.preview-title { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+.preview-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+
+.preview-media-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 24px;
+  background: var(--bg-deep);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 16 / 10;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.preview-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+}
+.preview-placeholder svg {
+  width: 64px; height: 64px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.preview-image {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.preview-details { margin-bottom: 32px; }
+.preview-filename { font-size: 16px; font-weight: 600; color: var(--text-primary); word-break: break-all; }
+.preview-filesize { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+
+.preview-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.btn-primary-large {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; max-width: 300px;
+  padding: 14px 24px;
+  background: var(--accent-grad);
+  border: none;
+  border-radius: var(--r-sm);
+  color: #fff;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-btn);
+}
+.btn-primary-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.45);
+}
+.btn-primary-large:active {
+  transform: translateY(0);
+}
+.btn-primary-large svg { width: 20px; height: 20px; }
+
+/* ── Recent Files ──────────────────────────────────────────────── */
+.recent-section {
+ position: relative; z-index: 1; }
 
 .recent-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -566,59 +641,6 @@ body {
 }
 .btn-refresh:hover { background: var(--glass-bg-hover); color: var(--text-primary); }
 .btn-refresh svg { width: 16px; height: 16px; transition: transform 0.4s; }
-.btn-refresh.spinning svg { animation: spin 0.6s linear infinite; }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Skeleton */
-.files-skeleton { display: flex; flex-direction: column; gap: 10px; }
-.skeleton-row {
-  height: 52px;
-  background: linear-gradient(90deg, var(--glass-bg) 25%, rgba(255,255,255,0.06) 50%, var(--glass-bg) 75%);
-  background-size: 200% 100%;
-  border-radius: var(--r-md);
-  animation: skeletonPulse 1.5s ease-in-out infinite;
-  border: 1px solid var(--glass-border);
-}
-@keyframes skeletonPulse {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Files table */
-.files-table-wrap {
-  display: none;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  backdrop-filter: blur(var(--glass-blur));
-}
-.files-table-wrap.visible { display: block; }
-
-.files-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.files-table thead tr {
-  background: rgba(255,255,255,0.025);
-  border-bottom: 1px solid var(--glass-border);
-}
-.files-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.files-table tbody tr {
-  border-bottom: 1px solid rgba(255,255,255,0.04);
   transition: background 0.15s;
 }
 .files-table tbody tr:last-child { border-bottom: none; }

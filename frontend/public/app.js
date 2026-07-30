@@ -41,11 +41,17 @@ const uploadAnotherBtn = document.getElementById('uploadAnotherBtn');
 const errorMessage   = document.getElementById('errorMessage');
 const errorDismiss   = document.getElementById('errorDismiss');
 
-const filesTableBody  = document.getElementById('filesTableBody');
-const filesTableWrap  = document.getElementById('filesTableWrap');
-const filesEmpty      = document.getElementById('filesEmpty');
-const filesSkeleton   = document.getElementById('filesSkeleton');
-const refreshBtn      = document.getElementById('refreshBtn');
+const previewCard        = document.getElementById('previewCard');
+const previewExpiry      = document.getElementById('previewExpiry');
+const previewMediaContainer = document.getElementById('previewMediaContainer');
+const previewPlaceholder = document.getElementById('previewPlaceholder');
+const previewLargeIcon   = document.getElementById('previewLargeIcon');
+const previewFilename    = document.getElementById('previewFilename');
+const previewFilesize    = document.getElementById('previewFilesize');
+const downloadBtn        = document.getElementById('downloadBtn');
+const previewUploadBtn   = document.getElementById('previewUploadBtn');
+const uploadCard         = document.querySelector('.upload-card');
+const heroSection        = document.querySelector('.hero');
 
 // ── State ────────────────────────────────────────────────────────────────────
 let isUploading = false;
@@ -152,6 +158,12 @@ async function copyToClipboard(text, btn) {
 
 async function handleFile(file) {
   if (!file || isUploading) return;
+  
+  if (file.size > 2 * 1024 * 1024 * 1024) {
+    showError('File exceeds the 2 GB limit.');
+    return;
+  }
+
   isUploading = true;
   hideError();
 
@@ -181,7 +193,11 @@ async function handleFile(file) {
       throw new Error(err.error || `HTTP ${sasRes.status}`);
     }
 
-    const { uploadUrl, shareUrl, originalName, expiresAt } = await sasRes.json();
+    const { uploadUrl, shareUrl, originalName, expiresAt, blobName } = await sasRes.json();
+    
+    // Override shareUrl to point to our frontend preview page
+    const localShareUrl = `${window.location.origin}?file=${blobName}`;
+
     setProgress(5, 'Uploading directly to Azure Blob Storage…');
 
     // ── Step 2: Upload file directly to Blob Storage via SAS URL ────────
@@ -193,12 +209,9 @@ async function handleFile(file) {
       ? `Link expires in ${Math.floor(hoursLeft / 24)} days`
       : `Link expires in ${hoursLeft} hours`;
 
-    shareLinkInput.value = shareUrl;
+    shareLinkInput.value = localShareUrl;
     successExpiry.textContent = expiryText;
     showPanel(successPanel);
-
-    // Refresh file list in background
-    loadFileList();
 
   } catch (err) {
     console.error('Upload failed:', err);
@@ -256,103 +269,89 @@ function resetUploadUI() {
   fileInput.value = '';
 }
 
-// ── File List ────────────────────────────────────────────────────────────────
+// ── Preview & Download ───────────────────────────────────────────────────────
 
-async function loadFileList() {
-  filesSkeleton.style.display = 'flex';
-  filesTableWrap.classList.remove('visible');
-  filesEmpty.classList.remove('visible');
+async function initPreview() {
+  const params = new URLSearchParams(window.location.search);
+  const blobName = params.get('file');
+  if (!blobName) return;
 
-  // Spin refresh icon
-  refreshBtn.classList.add('spinning');
+  // Hide main upload UI
+  uploadCard.style.display = 'none';
+  heroSection.style.display = 'none';
 
   try {
     const res = await fetch(`${API_BASE}/getFileList`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { files } = await res.json();
-
-    filesSkeleton.style.display = 'none';
-    refreshBtn.classList.remove('spinning');
-
-    if (!files || files.length === 0) {
-      filesEmpty.classList.add('visible');
+    
+    const file = files.find(f => f.blobName === blobName);
+    
+    if (!file) {
+      showError("This file does not exist or has expired.");
       return;
     }
 
-    filesTableWrap.classList.add('visible');
-    renderFileTable(files);
+    // Show preview card
+    previewCard.classList.add('visible');
+    previewFilename.textContent = file.originalName;
+    previewFilesize.textContent = formatBytes(file.size);
+    
+    const hours = hoursUntil(file.expiresAt);
+    previewExpiry.textContent = hours > 48 
+      ? `Expires in ${Math.floor(hours / 24)} days` 
+      : `Expires in ${hours} hours`;
+
+    // Render Image Preview if applicable
+    if (file.contentType.startsWith('image/')) {
+      previewPlaceholder.style.display = 'none';
+      
+      const img = document.createElement('img');
+      img.src = file.shareUrl;
+      img.className = 'preview-image';
+      previewMediaContainer.appendChild(img);
+    } else {
+      previewLargeIcon.setAttribute('data-lucide', getFileIcon(file.contentType));
+    }
+
+    // Download Action
+    downloadBtn.onclick = () => {
+      downloadBtn.innerHTML = '<i data-lucide="loader" class="spinning"></i> <span>Downloading...</span>';
+      lucide.createIcons();
+      forceDownload(file.shareUrl, file.originalName).finally(() => {
+        downloadBtn.innerHTML = '<i data-lucide="download"></i> <span>Download File</span>';
+        lucide.createIcons();
+      });
+    };
+
+    previewUploadBtn.onclick = () => {
+      window.location.href = '/';
+    };
 
   } catch (err) {
-    console.error('Failed to load files:', err);
-    filesSkeleton.style.display = 'none';
-    refreshBtn.classList.remove('spinning');
-    filesEmpty.classList.add('visible');
+    console.error('Failed to load file details:', err);
+    showError("Failed to load file details.");
   }
 }
 
-function renderFileTable(files) {
-  filesTableBody.innerHTML = '';
-
-  files.forEach((file) => {
-    const hours  = hoursUntil(file.expiresAt);
-    const isSoon = hours < 24;
-    const expiryLabel = hours > 48
-      ? `${Math.floor(hours / 24)}d left`
-      : `${hours}h left`;
-
-    const iconName = getFileIcon(file.contentType);
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>
-        <div class="file-name-cell">
-          <div class="file-type-icon">
-            <i data-lucide="${iconName}"></i>
-          </div>
-          <span class="file-display-name" title="${file.originalName}">
-            ${escapeHtml(file.originalName)}
-          </span>
-        </div>
-      </td>
-      <td>${formatBytes(file.size)}</td>
-      <td>${timeAgo(file.createdAt)}</td>
-      <td>
-        <span class="expiry-badge ${isSoon ? 'soon' : 'fresh'}">
-          <i data-lucide="clock"></i>
-          ${expiryLabel}
-        </span>
-      </td>
-      <td>
-        <button
-          class="table-copy-btn"
-          data-url="${escapeHtml(file.shareUrl)}"
-          aria-label="Copy link for ${escapeHtml(file.originalName)}"
-        >
-          <i data-lucide="copy"></i>
-          Copy link
-        </button>
-      </td>
-    `;
-
-    filesTableBody.appendChild(tr);
-  });
-
-  // Reinitialise Lucide icons for dynamically inserted elements
-  lucide.createIcons();
-
-  // Attach copy handlers to table buttons
-  filesTableBody.querySelectorAll('.table-copy-btn').forEach((btn) => {
-    btn.addEventListener('click', () => copyToClipboard(btn.dataset.url, btn));
-  });
+async function forceDownload(url, filename) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Download failed');
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (err) {
+    showError('Could not download file: ' + err.message);
+  }
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+// (Removed initPreviewMode as it's merged into initPreview above)
 
 // ── Event Listeners ──────────────────────────────────────────────────────────
 
@@ -404,8 +403,5 @@ uploadAnotherBtn.addEventListener('click', () => {
 // Dismiss error
 errorDismiss.addEventListener('click', hideError);
 
-// Refresh file list
-refreshBtn.addEventListener('click', loadFileList);
-
 // ── Initialise ───────────────────────────────────────────────────────────────
-loadFileList();
+initPreview();

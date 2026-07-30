@@ -93,7 +93,7 @@
             <i data-lucide="upload-cloud"></i>
           </div>
           <p class="drop-primary">Drop your file here</p>
-          <p class="drop-secondary" id="drop-zone-hint">or <span class="link-text">click to browse</span> — any file type up to 200 GB</p>
+          <p class="drop-secondary" id="drop-zone-hint">or <span class="link-text">click to browse</span> — any file type up to 2 GB</p>
         </div>
         <input
           type="file"
@@ -171,50 +171,36 @@
 
     </div>
 
-    <!-- ── Recent Files ──────────────────────────────────────────────────── -->
-    <section class="recent-section" aria-labelledby="recent-title">
-      <div class="recent-header">
-        <h2 id="recent-title" class="recent-title">
-          <i data-lucide="clock" aria-hidden="true"></i>
-          Recent Uploads
-        </h2>
-        <button class="btn-refresh" id="refreshBtn" aria-label="Refresh file list">
-          <i data-lucide="refresh-cw" id="refreshIcon"></i>
+    <!-- ── Preview Card (hidden initially) ──────────────────────────────── -->
+    <div class="card preview-card" id="previewCard" style="display: none;">
+      <div class="preview-header">
+        <h2 class="preview-title">File Shared With You</h2>
+        <p class="preview-subtitle" id="previewExpiry">Expires in 3 days</p>
+      </div>
+
+      <div class="preview-media-container" id="previewMediaContainer">
+        <!-- Injected via app.js if image -->
+        <div class="preview-placeholder" id="previewPlaceholder">
+          <i data-lucide="file" id="previewLargeIcon"></i>
+        </div>
+      </div>
+
+      <div class="preview-details">
+        <p class="preview-filename" id="previewFilename">filename.zip</p>
+        <p class="preview-filesize" id="previewFilesize">0 MB</p>
+      </div>
+
+      <div class="preview-actions">
+        <button class="btn-primary-large" id="downloadBtn">
+          <i data-lucide="download"></i>
+          <span>Download File</span>
+        </button>
+        <button class="btn-secondary" id="previewUploadBtn">
+          <i data-lucide="upload-cloud"></i>
+          <span>Upload your own</span>
         </button>
       </div>
-
-      <!-- Loading skeleton -->
-      <div class="files-skeleton" id="filesSkeleton" aria-label="Loading files…">
-        <div class="skeleton-row"></div>
-        <div class="skeleton-row"></div>
-        <div class="skeleton-row"></div>
-      </div>
-
-      <!-- Files table -->
-      <div class="files-table-wrap" id="filesTableWrap">
-        <table class="files-table" aria-label="Uploaded files">
-          <thead>
-            <tr>
-              <th scope="col">File</th>
-              <th scope="col">Size</th>
-              <th scope="col">Uploaded</th>
-              <th scope="col">Expires</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="filesTableBody">
-            <!-- Rows injected by app.js -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Empty state -->
-      <div class="files-empty" id="filesEmpty" aria-label="No files yet">
-        <i data-lucide="inbox" aria-hidden="true"></i>
-        <p>No files yet — upload your first one above!</p>
-      </div>
-    </section>
-
+    </div>
   </main>
 
   <!-- ── Footer ────────────────────────────────────────────────────────── -->

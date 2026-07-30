@@ -105,23 +105,3 @@ jobs:
           
           echo "❌ Health check failed after 5 minutes. The container might be crashing on startup."
           exit 1
-
-  # ── Swap to Production ────────────────────────────────────
-  swap-to-production:
-    name: Swap → Production 🔵
-    needs: [deploy-staging, smoke-test]
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Swap staging → production (zero-downtime)
-        run: |
-          az webapp deployment slot swap \
-            --name ${{ env.APP_SERVICE_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --slot staging
-          echo "✅ Swapped! Live at https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"

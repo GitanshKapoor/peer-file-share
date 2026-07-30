@@ -1,0 +1,40 @@
+name: Swap to Production 🔵
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm swap from staging to production'
+        required: true
+        default: 'no'
+
+env:
+  APP_SERVICE_NAME: ${{ secrets.AZURE_APP_SERVICE_NAME }}
+  RESOURCE_GROUP:   ${{ secrets.AZURE_RESOURCE_GROUP }}
+
+jobs:
+  swap:
+    name: Swap Staging → Production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Verify Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "yes" ]; then
+            echo "❌ Swap aborted: Confirmation not provided."
+            exit 1
+          fi
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Swap staging → production (zero-downtime)
+        run: |
+          echo "Initiating zero-downtime swap for ${{ env.APP_SERVICE_NAME }}..."
+          az webapp deployment slot swap \
+            --name ${{ env.APP_SERVICE_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --slot staging
+          echo "✅ Swapped! Live at https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
