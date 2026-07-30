@@ -9,8 +9,8 @@
 
 ```
 Browser
-  │
-  ├─► Azure App Service  (Frontend: Express + Static)
+  │   (Frontend: Express + Static UI with Preview/Download Card)
+  ├─► Azure App Service
   │     └─ Deployment Slots  (Blue 🔵 Production / Green 🟢 Staging)
   │           │
   │           │  Proxy /api/*
@@ -24,13 +24,15 @@ Browser
   └─► Azure Blob Storage  (direct upload via SAS write URL)
 ```
 
-**Key Azure concepts covered:**
+**Key Azure concepts & Features covered:**
 - Azure App Service + Deployment Slots (blue-green)
 - Azure Functions v4 (HTTP trigger + Blob trigger)
 - Azure Blob Storage + Lifecycle Management
 - Managed Identity + RBAC (zero secrets in production)
 - User Delegation SAS tokens
-- GitHub Actions CI/CD
+- GitHub Actions CI/CD with Decoupled Manual Slot Swapping
+- Strict 2 GB file upload limits handled serverlessly
+- Clean branded Preview & Secure Download UI
 
 ---
 
@@ -57,8 +59,10 @@ Browser
 │   ├── provision.sh              # ← Run this first!
 │   └── teardown.sh
 ├── .github/workflows/
-│   ├── deploy-frontend.yml       # Blue-green deployment pipeline
-│   └── deploy-api.yml            # Functions deployment
+│   ├── deploy-frontend.yml       # Deploys to staging slot
+│   ├── deploy-api.yml            # Functions deployment
+│   └── swap-production.yml       # Manual zero-downtime swap
+├── docker-compose.yml            # Local dev stack
 └── .gitignore
 ```
 
@@ -140,6 +144,15 @@ az role assignment create --assignee $MY_ID --role "Storage Blob Delegator" --sc
 
 ## Step 3: Run Locally
 
+The easiest way to run the entire stack locally is using Docker Compose. Ensure you have a `.env` file with `AZURE_STORAGE_CONNECTION_STRING` set.
+
+```bash
+docker compose up
+```
+
+This will instantly spin up both the **Frontend** (port 8080) and the **Azure Functions API** (port 7071) in connected containers.
+
+Alternatively, to run natively:
 ```bash
 # Terminal 1 — Start Azure Functions
 cd api
@@ -150,9 +163,9 @@ func start
 cd frontend
 npm install
 AZURE_FUNCTION_URL=http://localhost:7071 node server.js
-
-# Open http://localhost:8080
 ```
+
+Open http://localhost:8080 in your browser!
 
 ---
 
@@ -191,8 +204,8 @@ GitHub Actions will:
 1. Build the frontend
 2. Deploy to **staging slot** 🟢
 3. Run smoke tests (`/health` endpoint)
-4. If ✅ → **swap to production** 🔵 (zero downtime)
-5. If ❌ → abort, production untouched
+
+> 💡 **Production Swapping is decoupled.** To push your staging deployment to production, go to the Actions tab, select **Swap to Production 🔵**, and trigger it manually by typing `yes`. This ensures zero-downtime releases only happen when you are ready.
 
 ---
 

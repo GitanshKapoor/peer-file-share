@@ -54,8 +54,6 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     environment: staging
-    outputs:
-      staging_url: ${{ steps.get-url.outputs.url }}
 
     steps:
       - name: Azure Login
@@ -73,13 +71,7 @@ jobs:
             --docker-registry-server-url https://${{ env.ACR_LOGIN_SERVER }} \
             --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
             --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
-
-      - name: Get staging URL
-        id: get-url
-        run: |
-          URL="${{ env.APP_SERVICE_NAME }}-staging.azurewebsites.net"
-          echo "url=https://$URL" >> $GITHUB_OUTPUT
-          echo "Staging: https://$URL"
+            --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
 
   # ── Smoke Test ────────────────────────────────────────────
   smoke-test:
