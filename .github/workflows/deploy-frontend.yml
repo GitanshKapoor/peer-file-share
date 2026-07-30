@@ -77,11 +77,7 @@ jobs:
       - name: Get staging URL
         id: get-url
         run: |
-          URL=$(az webapp show \
-            --name ${{ env.APP_SERVICE_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --slot staging \
-            --query defaultHostName --output tsv)
+          URL="${{ env.APP_SERVICE_NAME }}-staging.azurewebsites.net"
           echo "url=https://$URL" >> $GITHUB_OUTPUT
           echo "Staging: https://$URL"
 
