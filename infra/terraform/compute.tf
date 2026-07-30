@@ -170,7 +170,7 @@ resource "azurerm_linux_function_app" "main" {
     "AZURE_STORAGE_ACCOUNT_NAME"            = azurerm_storage_account.main.name
     "AZURE_STORAGE_ACCOUNT_KEY"             = azurerm_storage_account.main.primary_access_key
     "AZURE_STORAGE_CONTAINER_NAME"          = azurerm_storage_container.uploads.name
-    "BlobStorageConnection__blobServiceUri" = "https://${azurerm_storage_account.main.name}.blob.core.windows.net"
+    "BlobStorageConnection"                 = azurerm_storage_account.main.primary_connection_string
     "ALLOWED_ORIGIN"                        = "https://${azurerm_linux_web_app.main.default_hostname}"
 
     # Functions runtime config

@@ -102,7 +102,7 @@ app.http('getSasUrl', {
         }),
       };
     } catch (error) {
-      context.log.error('❌ getSasUrl error:', error.message);
+      context.error('❌ getSasUrl error:', error.message);
       return {
         status: 500,
         headers: { 'Content-Type': 'application/json' },

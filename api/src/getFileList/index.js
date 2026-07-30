@@ -62,7 +62,7 @@ app.http('getFileList', {
         body: JSON.stringify({ files, count: files.length }),
       };
     } catch (error) {
-      context.log.error('❌ getFileList error:', error.message);
+      context.error('❌ getFileList error:', error.message);
       return {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
