@@ -315,7 +315,7 @@ async function init() {
   
   const path = window.location.pathname;
   if (path.startsWith('/d/')) {
-    const fileId = path.split('/d/')[1];
+    const fileId = decodeURIComponent(path.split('/d/')[1].replace(/\/$/, ''));
     if (fileId) {
       // Hide upload card, show preview card
       uploadCard.style.display = 'none';
@@ -323,7 +323,16 @@ async function init() {
       
       try {
         const res = await fetch(`${API_BASE}/getFileList`);
-        if (!res.ok) throw new Error('Failed to load file metadata');
+        const contentType = res.headers.get('content-type');
+        
+        if (contentType && contentType.includes('text/html')) {
+          throw new Error('API is unavailable. If you are running locally, ensure Azure Functions (func start) is running and AZURE_FUNCTION_URL is set.');
+        }
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`API Error ${res.status}: ${errText}`);
+        }
         
         const data = await res.json();
         const file = data.files?.find(f => f.blobName === fileId);
