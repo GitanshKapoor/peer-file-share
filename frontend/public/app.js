@@ -242,6 +242,7 @@ function uploadWithProgress(file, sasUrl) {
 
     xhr.open('PUT', sasUrl);
     // Required Azure Blob Storage headers
+    xhr.setRequestHeader('x-ms-version', '2023-11-03');
     xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
     // Force browser to download the file instead of displaying it inline
