@@ -64,36 +64,46 @@ flowchart LR
 
 ## 🏗️ System Architecture
 
+![PFS System Architecture](docs/architecture.jpg)
+
 ```mermaid
 flowchart TB
     Client["💻 Client Browser<br>(Vanilla JS SPA)"]
-    
+
     subgraph AppService ["Azure App Service (Blue/Green Slots)"]
         Proxy["Node.js Express<br>(Static Asset Server & API Proxy)"]
     end
-    
+
     subgraph Serverless ["Azure Functions (Consumption Tier)"]
         SAS["getSasUrl (HTTP Trigger)"]
         List["getFileList (HTTP Trigger)"]
         Trigger["onFileUploaded (Blob Trigger)"]
         MI["System-Assigned Managed Identity<br>(Zero Secrets Auth)"]
     end
-    
+
     subgraph Storage ["Azure Blob Storage"]
         Container["pfs-uploads Container"]
         Lifecycle["Data Lifecycle Policy<br>(Auto-Delete 3 Days)"]
     end
-    
+
+    subgraph Monitoring ["Azure Application Insights"]
+        Telemetry["Distributed Tracing<br>Error Alerts · Usage Analytics"]
+    end
+
     Client -- "1. Request Upload URL" --> Proxy
-    Proxy -- "2. Route to /api" --> SAS
+    Proxy -- "2. Proxy /api/*" --> SAS
     SAS -- "3. Authenticate via RBAC" --> MI
     MI -. "4. Issue Write-Only SAS" .-> Storage
     SAS -- "5. Return Short-Lived Token" --> Client
     Client == "6. Direct Binary Upload<br>(Bypasses Compute Memory)" ==> Container
     Container -- "7. Async Event" --> Trigger
+    Serverless -- "Telemetry" --> Monitoring
+    AppService -- "Logs & Metrics" --> Monitoring
 ```
 
 ---
+
+
 
 ## 🚀 End-to-End Setup & Provisioning
 
