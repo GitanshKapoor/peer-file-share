@@ -185,9 +185,6 @@ async function handleFile(file) {
     }
 
     const { uploadUrl, shareUrl, originalName, expiresAt, blobName } = await sasRes.json();
-    
-    // Override shareUrl to point to our frontend preview page
-    const localShareUrl = `${window.location.origin}?file=${blobName}`;
 
     setProgress(5, 'Uploading securely…');
 
@@ -197,7 +194,7 @@ async function handleFile(file) {
     // ── Step 3: Show Success UI ─────────────────────────────────────────
     const hoursLeft = hoursUntil(expiresAt);
     
-    shareLinkInput.value = localShareUrl;
+    shareLinkInput.value = shareUrl;
     successExpiry.textContent = hoursLeft > 48
       ? `Link expires in ${Math.floor(hoursLeft / 24)} days`
       : `Link expires in ${hoursLeft} hours`;
