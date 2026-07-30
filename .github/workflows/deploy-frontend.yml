@@ -1,0 +1,127 @@
+name: Deploy Frontend (Blue-Green Container)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+env:
+  APP_SERVICE_NAME: ${{ secrets.AZURE_APP_SERVICE_NAME }}
+  RESOURCE_GROUP:   ${{ secrets.AZURE_RESOURCE_GROUP }}
+  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+  IMAGE_NAME:       pfs-frontend
+
+jobs:
+  # ── Build & Push Docker Image ──────────────────────────────
+  build-and-push:
+    name: Build & Push Container 🐳
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tag (short SHA)
+        id: meta
+        run: echo "version=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+
+  # ── Deploy to Staging Slot ────────────────────────────────
+  deploy-staging:
+    name: Deploy → Staging 🟢
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: staging
+    outputs:
+      staging_url: ${{ steps.get-url.outputs.url }}
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set container image on staging slot
+        run: |
+          az webapp config container set \
+            --name ${{ env.APP_SERVICE_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --slot staging \
+            --docker-custom-image-name ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image_tag }} \
+            --docker-registry-server-url https://${{ env.ACR_LOGIN_SERVER }} \
+            --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
+            --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
+
+      - name: Get staging URL
+        id: get-url
+        run: |
+          URL=$(az webapp show \
+            --name ${{ env.APP_SERVICE_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --slot staging \
+            --query defaultHostName --output tsv)
+          echo "url=https://$URL" >> $GITHUB_OUTPUT
+          echo "Staging: https://$URL"
+
+  # ── Smoke Test ────────────────────────────────────────────
+  smoke-test:
+    name: Smoke Test 🧪
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for container to start
+        run: sleep 30
+
+      - name: Health check
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 30 --retry 3 --retry-delay 5 \
+            "${{ needs.deploy-staging.outputs.staging_url }}/health")
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "❌ Health check failed: HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "✅ Health check passed"
+
+  # ── Swap to Production ────────────────────────────────────
+  swap-to-production:
+    name: Swap → Production 🔵
+    needs: [deploy-staging, smoke-test]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Swap staging → production (zero-downtime)
+        run: |
+          az webapp deployment slot swap \
+            --name ${{ env.APP_SERVICE_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --slot staging
+          echo "✅ Swapped! Live at https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"

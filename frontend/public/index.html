@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PFS — Peer File Share | Instant Secure File Sharing</title>
+  <meta name="description" content="PFS is a serverless, secure file sharing app built on Azure. Drop a file, get a shareable link instantly. Files auto-delete after 3 days." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Background Orbs -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ── Navigation ───────────────────────────────────────────────────── -->
+  <nav class="navbar" role="navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand" aria-label="PFS Home">
+        <div class="brand-icon" aria-hidden="true">
+          <i data-lucide="share-2"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">PFS</span>
+          <span class="brand-tagline">Peer File Share</span>
+        </div>
+      </a>
+
+      <div class="nav-badge">
+        <span class="badge-dot" aria-hidden="true"></span>
+        <span>Powered by Azure</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ──────────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- Hero Section -->
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="hero-title">
+        Share files <span class="gradient-text">instantly</span>.<br />
+        No sign-up. No limits.
+      </h1>
+      <p class="hero-subtitle">
+        Drop your file below — get a shareable link in seconds.<br />
+        Files are auto-deleted after <strong>3 days</strong>.
+      </p>
+
+      <!-- Stat Pills -->
+      <div class="hero-stats" role="list">
+        <div class="stat-pill" role="listitem">
+          <i data-lucide="shield-check" aria-hidden="true"></i>
+          <span>End-to-end secure</span>
+        </div>
+        <div class="stat-pill" role="listitem">
+          <i data-lucide="zap" aria-hidden="true"></i>
+          <span>Serverless Azure</span>
+        </div>
+        <div class="stat-pill" role="listitem">
+          <i data-lucide="clock" aria-hidden="true"></i>
+          <span>Auto-deletes in 3 days</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Upload Card ──────────────────────────────────────────────────── -->
+    <div class="card upload-card">
+
+      <!-- Drop Zone -->
+      <div
+        class="drop-zone"
+        id="dropZone"
+        role="button"
+        tabindex="0"
+        aria-label="Click or drag and drop a file to upload"
+        aria-describedby="drop-zone-hint"
+      >
+        <div class="drop-zone-inner">
+          <div class="drop-icon" aria-hidden="true">
+            <i data-lucide="upload-cloud"></i>
+          </div>
+          <p class="drop-primary">Drop your file here</p>
+          <p class="drop-secondary" id="drop-zone-hint">or <span class="link-text">click to browse</span> — any file type up to 200 GB</p>
+        </div>
+        <input
+          type="file"
+          id="fileInput"
+          class="file-input"
+          aria-label="Select a file to upload"
+        />
+      </div>
+
+      <!-- ── Upload Progress (hidden initially) ───────────────────────── -->
+      <div class="upload-progress" id="uploadProgress" aria-live="polite" aria-atomic="true">
+        <div class="progress-header">
+          <div class="progress-file-info">
+            <div class="progress-file-icon" aria-hidden="true">
+              <i data-lucide="file" id="progressFileIcon"></i>
+            </div>
+            <div class="progress-file-details">
+              <p class="progress-file-name" id="progressFileName">filename.pdf</p>
+              <p class="progress-file-size" id="progressFileSize">2.4 MB</p>
+            </div>
+          </div>
+          <span class="progress-pct" id="progressPct" aria-label="Upload progress">0%</span>
+        </div>
+
+        <div class="progress-bar-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBarTrack">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+
+        <p class="progress-status" id="progressStatus">Preparing upload…</p>
+      </div>
+
+      <!-- ── Success Panel (hidden initially) ─────────────────────────── -->
+      <div class="success-panel" id="successPanel" aria-live="polite">
+        <div class="success-header">
+          <div class="success-icon" aria-hidden="true">
+            <i data-lucide="check-circle-2"></i>
+          </div>
+          <div>
+            <p class="success-title">File uploaded!</p>
+            <p class="success-subtitle" id="successExpiry">Link expires in 3 days</p>
+          </div>
+        </div>
+
+        <div class="share-link-box">
+          <label class="share-link-label" for="shareLinkInput">Shareable link</label>
+          <div class="share-link-row">
+            <input
+              type="text"
+              id="shareLinkInput"
+              class="share-link-input"
+              readonly
+              aria-label="Shareable file link"
+            />
+            <button class="copy-btn" id="copyBtn" aria-label="Copy link to clipboard">
+              <i data-lucide="copy" id="copyBtnIcon"></i>
+              <span id="copyBtnText">Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn-upload-another" id="uploadAnotherBtn" aria-label="Upload another file">
+          <i data-lucide="plus-circle" aria-hidden="true"></i>
+          Upload another file
+        </button>
+      </div>
+
+      <!-- Error Banner -->
+      <div class="error-banner" id="errorBanner" role="alert" aria-live="assertive">
+        <i data-lucide="alert-circle" aria-hidden="true"></i>
+        <span id="errorMessage">Something went wrong.</span>
+        <button class="error-dismiss" id="errorDismiss" aria-label="Dismiss error">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ── Recent Files ──────────────────────────────────────────────────── -->
+    <section class="recent-section" aria-labelledby="recent-title">
+      <div class="recent-header">
+        <h2 id="recent-title" class="recent-title">
+          <i data-lucide="clock" aria-hidden="true"></i>
+          Recent Uploads
+        </h2>
+        <button class="btn-refresh" id="refreshBtn" aria-label="Refresh file list">
+          <i data-lucide="refresh-cw" id="refreshIcon"></i>
+        </button>
+      </div>
+
+      <!-- Loading skeleton -->
+      <div class="files-skeleton" id="filesSkeleton" aria-label="Loading files…">
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </div>
+
+      <!-- Files table -->
+      <div class="files-table-wrap" id="filesTableWrap">
+        <table class="files-table" aria-label="Uploaded files">
+          <thead>
+            <tr>
+              <th scope="col">File</th>
+              <th scope="col">Size</th>
+              <th scope="col">Uploaded</th>
+              <th scope="col">Expires</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="filesTableBody">
+            <!-- Rows injected by app.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty state -->
+      <div class="files-empty" id="filesEmpty" aria-label="No files yet">
+        <i data-lucide="inbox" aria-hidden="true"></i>
+        <p>No files yet — upload your first one above!</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <p>
+      Built on
+      <a href="https://azure.microsoft.com" target="_blank" rel="noopener noreferrer" aria-label="Microsoft Azure (opens in new tab)">Microsoft Azure</a>
+      ·
+      <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="View source on GitHub (opens in new tab)">GitHub</a>
+    </p>
+    <p class="footer-tech">Azure App Service · Azure Functions · Blob Storage · Managed Identity</p>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // Initialize Lucide icons after DOM is ready
+    lucide.createIcons();
+  </script>
+</body>
+</html>

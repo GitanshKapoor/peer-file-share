@@ -1,0 +1,10 @@
+node_modules/
+npm-debug.log
+.env
+local.settings.json
+*.tfstate
+*.tfvars
+.terraform/
+.git/
+.DS_Store
+*.md

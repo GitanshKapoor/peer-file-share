@@ -1,0 +1,18 @@
+{
+  "name": "pfs-api",
+  "version": "1.0.0",
+  "description": "PFS - Peer File Share: Azure Functions v4 API",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "func start",
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0",
+    "@azure/identity": "^4.4.0",
+    "@azure/storage-blob": "^12.25.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

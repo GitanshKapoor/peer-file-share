@@ -1,0 +1,47 @@
+# ============================================================
+# PFS — Docker Compose
+# Runs the entire stack locally with a single command:
+#   docker compose up
+# ============================================================
+
+services:
+
+  # ── Azure Functions API ────────────────────────────────────
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: pfs-api
+    ports:
+      - "7071:80"   # Azure Functions runs on 80 inside container
+    environment:
+      # Copy values from api/local.settings.json here
+      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
+      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
+      - AZURE_STORAGE_CONTAINER_NAME=${AZURE_STORAGE_CONTAINER_NAME:-pfs-uploads}
+      - BlobStorageConnection__blobServiceUri=https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net
+      - ALLOWED_ORIGIN=http://localhost:8080
+      - AzureWebJobsStorage=${AZURE_WEBJOBS_STORAGE:-UseDevelopmentStorage=true}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/api/getFileList"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ── Frontend Express Server ────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pfs-frontend
+    ports:
+      - "8080:8080"
+    environment:
+      # Points to the api container inside Docker network
+      - AZURE_FUNCTION_URL=http://api:80
+      - ENVIRONMENT=development
+      - PORT=8080
+    depends_on:
+      api:
+        condition: service_started
