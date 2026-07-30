@@ -10,7 +10,7 @@ const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storag
 
 app.http('getFileList', {
   methods: ['GET'],
-  authLevel: 'function',
+  authLevel: 'anonymous',
   handler: async (request, context) => {
     try {
       const accountName   = process.env.AZURE_STORAGE_ACCOUNT_NAME;

@@ -23,7 +23,7 @@ const crypto = require('crypto');
 
 app.http('getSasUrl', {
   methods: ['GET'],
-  authLevel: 'function',
+  authLevel: 'anonymous',
   handler: async (request, context) => {
     try {
       const fileName = request.query.get('fileName');

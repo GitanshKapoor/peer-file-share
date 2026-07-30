@@ -55,6 +55,7 @@ resource "azurerm_linux_web_app" "main" {
     "NODE_ENV"                       = "production"
     "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
     "WEBSITE_NODE_DEFAULT_VERSION"   = "~18"
+    "WEBSITES_PORT"                  = "8080"
   }
 
   logs {
@@ -96,6 +97,7 @@ resource "azurerm_linux_web_app_slot" "staging" {
     "NODE_ENV"                       = "production"
     "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
     "WEBSITE_NODE_DEFAULT_VERSION"   = "~18"
+    "WEBSITES_PORT"                  = "8080"
   }
 
   tags = local.common_tags
