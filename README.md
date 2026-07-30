@@ -3,15 +3,10 @@
 > A modern, serverless file-sharing application built entirely on Microsoft Azure.  
 > Drop a file → get a secure shareable link → files auto-delete after **3 days**.
 
-````carousel
-![Home Upload UI](docs/home.png)
-<!-- slide -->
-![Uploading State](docs/uploading.png)
-<!-- slide -->
-![Success State with Shareable Link](docs/success.png)
-<!-- slide -->
-![Secure Preview UI](docs/preview.png)
-````
+<p align="center">
+  <img src="docs/home.png" width="48%" alt="Home Upload UI" />
+  <img src="docs/success.png" width="48%" alt="Success State" />
+</p>
 
 PFS is an enterprise-grade reference architecture demonstrating how to leverage Azure Serverless technologies to build highly scalable, cost-optimized applications. 
 
@@ -26,6 +21,44 @@ By utilizing **Write-Only SAS Tokens**, the frontend client uploads massive 2 GB
 - **Cost Optimization**: Direct-to-blob uploads mean the backend only processes lightweight JSON metadata requests, dramatically reducing compute execution costs.
 - **Automated Lifecycle Management**: Blob Storage is configured with a strict data retention policy that automatically purges files older than 3 days, eliminating manual database cleanup and runaway storage costs.
 - **Zero-Downtime Releases**: Infrastructure as Code (Terraform) provisions Azure App Service Deployment Slots, enabling automated blue-green deployments via GitHub Actions.
+
+---
+
+## 🔵 🟢 Blue-Green Deployments
+
+PFS utilizes **Azure App Service Deployment Slots** for true zero-downtime releases. This is fully automated via our GitHub Actions:
+
+1. **Continuous Deployment:** Any push to `main` triggers a build of the Docker container, which is deployed to an isolated `staging` slot (the Green environment).
+2. **Automated Smoke Tests:** The CI/CD pipeline automatically runs a health check against the staging environment. Production users experience zero disruption.
+3. **Decoupled Release:** When you are ready to go live, you manually trigger the **Swap to Production** workflow. Azure instantly swaps the underlying IP routes, directing all live traffic to the new code instantly.
+
+```mermaid
+flowchart LR
+    Dev["🧑‍💻 Developer"]
+    
+    subgraph GitHub ["GitHub"]
+        Code["main branch"]
+        CI["GitHub Actions<br>(deploy-frontend.yml)"]
+        Swap["GitHub Actions<br>(swap-production.yml)"]
+    end
+    
+    subgraph Azure ["Microsoft Azure"]
+        ACR["Container Registry"]
+        
+        subgraph AppService ["Azure App Service"]
+            Staging["🟢 Staging Slot<br>(Offline Testing)"]
+            Prod["🔵 Production Slot<br>(Live Traffic)"]
+        end
+    end
+    
+    Dev -- "1. Git Push" --> Code
+    Code -- "2. Trigger" --> CI
+    CI -- "3. Build & Push" --> ACR
+    CI -- "4. Deploy & Smoke Test" --> Staging
+    
+    Dev -. "5. Trigger Swap (Manual)" .-> Swap
+    Swap -. "6. Swap Routes" .-> AppService
+```
 
 ---
 
