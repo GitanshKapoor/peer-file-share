@@ -198,7 +198,7 @@ async function handleFile(file) {
     // Override shareUrl to point to our frontend preview page
     const localShareUrl = `${window.location.origin}?file=${blobName}`;
 
-    setProgress(5, 'Uploading directly to Azure Blob Storage…');
+    setProgress(5, 'Uploading securely…');
 
     // ── Step 2: Upload file directly to Blob Storage via SAS URL ────────
     await uploadWithProgress(file, uploadUrl);
@@ -330,7 +330,7 @@ async function initPreview() {
 
   } catch (err) {
     console.error('Failed to load file details:', err);
-    showError("Failed to load file details.");
+    showError(`Failed to load file details: ${err.message}`);
   }
 }
 
