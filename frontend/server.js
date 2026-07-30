@@ -43,6 +43,7 @@ if (FUNCTION_URL) {
     createProxyMiddleware({
       target: FUNCTION_URL,
       changeOrigin: true,
+      pathRewrite: (path, req) => req.originalUrl,
       on: {
         proxyReq: (proxyReq) => {
           if (FUNCTION_KEY) {
