@@ -172,6 +172,33 @@
       </div>
 
     </div>
+    
+    <!-- ── Preview Card (hidden initially) ──────────────────────────────── -->
+    <div class="card preview-card" id="previewCard" style="display: none;">
+      <div class="preview-header">
+        <h2 class="preview-title">Ready to download</h2>
+        <p class="preview-subtitle">This file was securely shared via PFS</p>
+      </div>
+
+      <div class="preview-media-container" id="previewMediaContainer">
+        <div class="preview-placeholder" id="previewPlaceholder">
+          <i data-lucide="file" id="previewBigIcon"></i>
+        </div>
+        <img id="previewImage" class="preview-image" src="" alt="File preview" style="display: none;" />
+      </div>
+
+      <div class="preview-details">
+        <p class="preview-filename" id="previewCardFileName">filename.ext</p>
+        <p class="preview-filesize" id="previewCardFileSize">0 B</p>
+      </div>
+
+      <div class="preview-actions">
+        <a href="#" class="btn-primary-large" id="downloadBtn" download>
+          <i data-lucide="download"></i>
+          Download File
+        </a>
+      </div>
+    </div>
 
   </main>
 

@@ -41,6 +41,16 @@ const uploadAnotherBtn = document.getElementById('uploadAnotherBtn');
 const errorMessage   = document.getElementById('errorMessage');
 const errorDismiss   = document.getElementById('errorDismiss');
 
+// Preview Card DOM
+const uploadCard          = document.getElementById('uploadCard');
+const previewCard         = document.getElementById('previewCard');
+const previewCardFileName = document.getElementById('previewCardFileName');
+const previewCardFileSize = document.getElementById('previewCardFileSize');
+const previewBigIcon      = document.getElementById('previewBigIcon');
+const previewImage        = document.getElementById('previewImage');
+const previewPlaceholder  = document.getElementById('previewPlaceholder');
+const downloadBtn         = document.getElementById('downloadBtn');
+
 // Error banner logic relies on errorMessage and errorDismiss
 
 // State
@@ -299,4 +309,53 @@ uploadAnotherBtn.addEventListener('click', () => {
 // Dismiss error
 errorDismiss.addEventListener('click', hideError);
 
-// Initialise
+// ── Initialise (Client-Side Routing) ──────────────────────────────────
+async function init() {
+  lucide.createIcons();
+  
+  const path = window.location.pathname;
+  if (path.startsWith('/d/')) {
+    const fileId = path.split('/d/')[1];
+    if (fileId) {
+      // Hide upload card, show preview card
+      uploadCard.style.display = 'none';
+      previewCard.style.display = 'block';
+      
+      try {
+        const res = await fetch(`${API_BASE}/getFileList`);
+        if (!res.ok) throw new Error('Failed to load file metadata');
+        
+        const data = await res.json();
+        const file = data.files?.find(f => f.blobName === fileId);
+        
+        if (!file) {
+          throw new Error('File not found or link has expired.');
+        }
+        
+        // Populate Preview Card
+        previewCardFileName.textContent = file.originalName;
+        previewCardFileSize.textContent = formatBytes(file.size);
+        
+        const iconName = getFileIcon(file.contentType);
+        
+        if (file.contentType && file.contentType.startsWith('image/')) {
+          // Show Image Preview
+          previewPlaceholder.style.display = 'none';
+          previewImage.src = file.shareUrl;
+          previewImage.style.display = 'block';
+        } else {
+          // Show Icon Preview
+          previewBigIcon.setAttribute('data-lucide', iconName);
+          lucide.createIcons();
+        }
+        
+        downloadBtn.href = file.shareUrl;
+        
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+  }
+}
+
+init();
