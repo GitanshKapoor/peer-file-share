@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PFS Architecture Diagram</title>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+  <style>
+    body { background-color: #0d1117; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }
+    .mermaid { padding: 40px; background-color: #161b22; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  </style>
+</head>
+<body>
+  <div class="mermaid">
+    flowchart TB
+      Client["💻 Client Browser<br> Edge, Firefox, Comet"]
+      
+      subgraph AppService ["Azure App Service (Blue/Green Slots)"]
+          Proxy["Node.js Express<br>(Static Asset Server & API Proxy)"]
+      end
+      
+      subgraph Serverless ["Azure Functions (Consumption Tier)"]
+          SAS["getSasUrl (HTTP Trigger)"]
+          List["getFileList (HTTP Trigger)"]
+          Trigger["onFileUploaded (Blob Trigger)"]
+          MI["System-Assigned Managed Identity<br>(Zero Secrets Auth)"]
+      end
+      
+      subgraph Storage ["Azure Blob Storage"]
+          Container["pfs-uploads Container"]
+          Lifecycle["Data Lifecycle Policy<br>(Auto-Delete 3 Days)"]
+      end
+      
+      Client -- "1. Request Upload URL" --> Proxy
+      Proxy -- "2. Route to /api" --> SAS
+      SAS -- "3. Authenticate via RBAC" --> MI
+      MI -. "4. Issue Write-Only SAS" .-> Storage
+      SAS -- "5. Return Short-Lived Token" --> Client
+      Client == "6. Direct Binary Upload<br>(Bypasses Compute Memory)" ==> Container
+      Container -- "7. Async Event" --> Trigger
+  </div>
+</body>
+</html>
