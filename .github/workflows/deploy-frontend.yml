@@ -87,20 +87,24 @@ jobs:
     needs: deploy-staging
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for container to start
-        run: sleep 30
-
-      - name: Health check
+      - name: Wait for container to start & Health check
         run: |
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 --retry 3 --retry-delay 5 \
-            "${{ needs.deploy-staging.outputs.staging_url }}/health")
-
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "❌ Health check failed: HTTP $HTTP_STATUS"
-            exit 1
-          fi
-          echo "✅ Health check passed"
+          URL="https://${{ env.APP_SERVICE_NAME }}-staging.azurewebsites.net/health"
+          echo "Waiting for Azure App Service to pull the container and start... (checking $URL)"
+          
+          # Try for up to 5 minutes (30 attempts * 10 seconds)
+          for i in {1..30}; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || true)
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Health check passed! Container is fully online."
+              exit 0
+            fi
+            echo "Attempt $i/30: HTTP $HTTP_STATUS - waiting 10s..."
+            sleep 10
+          done
+          
+          echo "❌ Health check failed after 5 minutes. The container might be crashing on startup."
+          exit 1
 
   # ── Swap to Production ────────────────────────────────────
   swap-to-production:
