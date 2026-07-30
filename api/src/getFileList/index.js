@@ -7,6 +7,14 @@
 
 const { app } = require('@azure/functions');
 const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
+const crypto = require('crypto');
+
+// Polyfill for Azure SDKs that rely on globalThis.crypto.randomUUID in Node 18 runtimes
+if (!globalThis.crypto) {
+  globalThis.crypto = crypto;
+} else if (!globalThis.crypto.randomUUID) {
+  globalThis.crypto.randomUUID = crypto.randomUUID;
+}
 
 app.http('getFileList', {
   methods: ['GET'],

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PFS — Peer File Share | Instant Secure File Sharing</title>
   <meta name="description" content="PFS is a serverless, secure file sharing app built on Azure. Drop a file, get a shareable link instantly. Files auto-delete after 3 days." />
+  
+  <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -76,8 +78,17 @@
       </div>
     </section>
 
+    <!-- Error Banner (Global) -->
+    <div class="error-banner" id="errorBanner" role="alert" aria-live="assertive">
+      <i data-lucide="alert-circle" aria-hidden="true"></i>
+      <span id="errorMessage">Something went wrong.</span>
+      <button class="error-dismiss" id="errorDismiss" aria-label="Dismiss error">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
     <!-- ── Upload Card ──────────────────────────────────────────────────── -->
-    <div class="card upload-card">
+    <div class="card upload-card" id="uploadCard">
 
       <!-- Drop Zone -->
       <div
@@ -157,15 +168,6 @@
         <button class="btn-upload-another" id="uploadAnotherBtn" aria-label="Upload another file">
           <i data-lucide="plus-circle" aria-hidden="true"></i>
           Upload another file
-        </button>
-      </div>
-
-      <!-- Error Banner -->
-      <div class="error-banner" id="errorBanner" role="alert" aria-live="assertive">
-        <i data-lucide="alert-circle" aria-hidden="true"></i>
-        <span id="errorMessage">Something went wrong.</span>
-        <button class="error-dismiss" id="errorDismiss" aria-label="Dismiss error">
-          <i data-lucide="x"></i>
         </button>
       </div>
 
