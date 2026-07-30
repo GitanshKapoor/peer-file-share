@@ -11,7 +11,7 @@
 Browser
   │   (Frontend: Express + Static UI with Preview/Download Card)
   ├─► Azure App Service
-  │     └─ Deployment Slots  (Blue 🔵 Production / Green 🟢 Staging)
+  │     └─ Deployment Slots  (Blue Production / Green Staging)
   │           │
   │           │  Proxy /api/*
   │           ▼
@@ -108,7 +108,7 @@ This script provisions (in order):
 9. RBAC: `Storage Blob Data Contributor` + `Storage Blob Delegator` → Function
 10. App Settings (no connection strings!)
 
-> ⚠️ Note: RBAC role assignments take **5–10 minutes** to propagate after provisioning.
+> Note: RBAC role assignments take **5–10 minutes** to propagate after provisioning.
 
 ---
 
@@ -202,10 +202,10 @@ git push origin main
 
 GitHub Actions will:
 1. Build the frontend
-2. Deploy to **staging slot** 🟢
+2. Deploy to **staging slot**
 3. Run smoke tests (`/health` endpoint)
 
-> 💡 **Production Swapping is decoupled.** To push your staging deployment to production, go to the Actions tab, select **Swap to Production 🔵**, and trigger it manually by typing `yes`. This ensures zero-downtime releases only happen when you are ready.
+> **Production Swapping is decoupled.** To push your staging deployment to production, go to the Actions tab, select **Swap to Production**, and trigger it manually by typing `yes`. This ensures zero-downtime releases only happen when you are ready.
 
 ---
 
@@ -244,7 +244,7 @@ Azure Function (Managed Identity)
           │                         │
           │  Has RBAC Role?         │
           │  Storage Blob Data      │
-          │  Contributor ✅         │
+          │  Contributor            │
           └──────────────────────►  Access Granted
 ```
 
@@ -261,7 +261,7 @@ chmod +x infra/teardown.sh
 ./infra/teardown.sh pfs-rg
 ```
 
-> ⚠️ This permanently deletes all resources and all uploaded files.
+> This permanently deletes all resources and all uploaded files.
 
 ---
 
@@ -274,7 +274,7 @@ chmod +x infra/teardown.sh
 | Blob Storage | LRS Standard | ~$0.02/GB |
 | **Total** | | **~$73/mo** |
 
-> 💡 Switch to **Basic B1** App Service Plan to save ~$45/mo, but you'll lose deployment slots.
+> Switch to **Basic B1** App Service Plan to save ~$45/mo, but you'll lose deployment slots.
 
 ---
 
@@ -289,3 +289,18 @@ chmod +x infra/teardown.sh
 | **Event-driven** | Blob Trigger in `onFileUploaded/index.js` |
 | **Lifecycle Management** | Auto-delete policy in `provision.sh` |
 | **CI/CD** | GitHub Actions workflows |
+
+---
+
+## Roadmap & Contributing
+
+We welcome open-source contributions! While the core application is fully functional, secure, and performs well, we are actively looking to implement the following enterprise-grade features:
+
+1. **Malware / Virus Scanning:** Add an Azure Event Grid trigger that invokes a ClamAV container to scan blobs as soon as they land in `pfs-uploads`, quarantining infected files.
+2. **Rate Limiting & DDoS Protection:** Add `express-rate-limit` middleware on the frontend proxy and integrate Azure API Management (APIM) in front of the Azure Functions.
+3. **Global CDN (Content Delivery Network):** Integrate Azure Front Door or Azure CDN to cache blobs globally for ultra-fast downloads.
+4. **Secret Management:** Move from App Settings to Azure Key Vault integration, fetching secrets dynamically at runtime via Managed Identities.
+5. **Telemetry & Analytics:** Integrate Azure Application Insights for distributed tracing, error tracking, and usage analytics.
+6. **Automated Infrastructure CI/CD:** Create a GitHub Actions workflow (`deploy-infra.yml`) that runs `terraform plan` on PRs and `terraform apply` on merges to `main`.
+
+Feel free to open an issue or submit a Pull Request!
