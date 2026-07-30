@@ -71,7 +71,6 @@ jobs:
             --docker-registry-server-url https://${{ env.ACR_LOGIN_SERVER }} \
             --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
             --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
-            --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
 
   # ── Smoke Test ────────────────────────────────────────────
   smoke-test:
