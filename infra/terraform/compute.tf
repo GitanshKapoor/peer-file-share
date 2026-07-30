@@ -40,8 +40,17 @@ resource "azurerm_linux_web_app" "main" {
     health_check_eviction_time_in_min = 5            # Evict instance if unhealthy for 5 mins
 
     application_stack {
-      node_version = var.node_version
+      docker_image_name        = "pfs-frontend:latest"
+      docker_registry_url      = "https://${azurerm_container_registry.main.login_server}"
+      docker_registry_username = azurerm_container_registry.main.admin_username
+      docker_registry_password = azurerm_container_registry.main.admin_password
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      site_config[0].application_stack[0].docker_image_name
+    ]
   }
 
   # System-Assigned Managed Identity on the App Service
@@ -56,6 +65,7 @@ resource "azurerm_linux_web_app" "main" {
     "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
     "WEBSITE_NODE_DEFAULT_VERSION"   = "~18"
     "WEBSITES_PORT"                  = "8080"
+    "DOCKER_ENABLE_CI"               = "true"
   }
 
   logs {
@@ -82,8 +92,17 @@ resource "azurerm_linux_web_app_slot" "staging" {
     health_check_eviction_time_in_min = 5
 
     application_stack {
-      node_version = var.node_version
+      docker_image_name        = "pfs-frontend:latest"
+      docker_registry_url      = "https://${azurerm_container_registry.main.login_server}"
+      docker_registry_username = azurerm_container_registry.main.admin_username
+      docker_registry_password = azurerm_container_registry.main.admin_password
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      site_config[0].application_stack[0].docker_image_name
+    ]
   }
 
   identity {
@@ -98,6 +117,7 @@ resource "azurerm_linux_web_app_slot" "staging" {
     "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
     "WEBSITE_NODE_DEFAULT_VERSION"   = "~18"
     "WEBSITES_PORT"                  = "8080"
+    "DOCKER_ENABLE_CI"               = "true"
   }
 
   tags = local.common_tags
@@ -124,8 +144,20 @@ resource "azurerm_linux_function_app" "main" {
 
   site_config {
     application_stack {
-      node_version = "18"
+      docker {
+        registry_url      = "https://${azurerm_container_registry.main.login_server}"
+        image_name        = "pfs-api"
+        image_tag         = "latest"
+        registry_username = azurerm_container_registry.main.admin_username
+        registry_password = azurerm_container_registry.main.admin_password
+      }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      site_config[0].application_stack[0].docker[0].image_tag
+    ]
   }
 
   app_settings = {
@@ -139,9 +171,8 @@ resource "azurerm_linux_function_app" "main" {
 
     # Functions runtime config
     "FUNCTIONS_EXTENSION_VERSION"  = "~4"
-    "FUNCTIONS_WORKER_RUNTIME"     = "node"
-    "WEBSITE_NODE_DEFAULT_VERSION" = "~18"
-    "WEBSITE_RUN_FROM_PACKAGE"     = "1"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
+    "DOCKER_ENABLE_CI"             = "true"
   }
 
   tags = local.common_tags
