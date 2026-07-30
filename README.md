@@ -304,7 +304,5 @@ We are actively working on turning this into a fully enterprise-grade platform. 
 6. **Automated Infrastructure CI/CD:** Create a GitHub Actions workflow (`deploy-infra.yml`) that runs `terraform plan` on PRs and `terraform apply` on merges to `main`.
 7. **End-to-End (E2E) Encryption:** Encrypt files in the browser using the WebCrypto API before upload, ensuring zero-knowledge storage where the server never sees the plaintext file.
 8. **Password Protection:** Allow users to set a password for the download link, encrypting the AES key before generating the shareable link.
-9. **Custom Domains & Branding:** Support custom vanity URLs (e.g., `share.yourcompany.com`) and whitelabeling for organizations.
-10. **Webhooks:** Allow users to receive an HTTP POST request when their file is downloaded or reaches its auto-delete lifecycle.
 
 Feel free to open an issue or submit a Pull Request!

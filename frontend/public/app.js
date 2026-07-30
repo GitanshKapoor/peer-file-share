@@ -309,6 +309,42 @@ uploadAnotherBtn.addEventListener('click', () => {
 // Dismiss error
 errorDismiss.addEventListener('click', hideError);
 
+// Force cross-origin download programmatically
+downloadBtn.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const url = downloadBtn.dataset.href;
+  if (!url) return;
+  
+  const originalHtml = downloadBtn.innerHTML;
+  downloadBtn.innerHTML = '<span style="margin:auto">Downloading...</span>';
+  downloadBtn.style.pointerEvents = 'none';
+  downloadBtn.style.opacity = '0.7';
+  
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Download failed');
+    
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = previewCardFileName.textContent || 'download';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (err) {
+    showError('Failed to securely download the file.');
+  } finally {
+    downloadBtn.innerHTML = originalHtml;
+    downloadBtn.style.pointerEvents = 'auto';
+    downloadBtn.style.opacity = '1';
+    lucide.createIcons();
+  }
+});
+
 // ── Initialise (Client-Side Routing) ──────────────────────────────────
 async function init() {
   lucide.createIcons();
@@ -358,7 +394,7 @@ async function init() {
           lucide.createIcons();
         }
         
-        downloadBtn.href = file.shareUrl;
+        downloadBtn.dataset.href = file.shareUrl;
         
       } catch (err) {
         showError(err.message);
