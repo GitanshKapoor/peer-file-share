@@ -1,4 +1,4 @@
-name: Swap to Production 🔵
+name: Swap to Production
 
 on:
   workflow_dispatch:
@@ -21,7 +21,7 @@ jobs:
       - name: Verify Confirmation
         run: |
           if [ "${{ github.event.inputs.confirm }}" != "yes" ]; then
-            echo "❌ Swap aborted: Confirmation not provided."
+            echo "Swap aborted: Confirmation not provided."
             exit 1
           fi
 
@@ -37,4 +37,4 @@ jobs:
             --name ${{ env.APP_SERVICE_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --slot staging
-          echo "✅ Swapped! Live at https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
+          echo "Swapped! Live at https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"

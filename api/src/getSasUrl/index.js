@@ -5,9 +5,7 @@
  *   1. A write-only SAS URL (15 min TTL) → browser uploads directly to Blob Storage
  *   2. A permanent public share URL (readable until blob is auto-deleted after 3 days)
  *
- * Auth strategy:
- *   - Production (real Azure with Owner): DefaultAzureCredential + getUserDelegationKey
- *   - Lab environment (Contributor only): StorageSharedKeyCredential from AZURE_STORAGE_ACCOUNT_KEY
+ * Auth strategies supported: StorageSharedKeyCredential or Managed Identity.
  *
  * The key is stored as an encrypted Azure App Setting — never in source code.
  */
@@ -69,10 +67,10 @@ app.http('getSasUrl', {
       const blobClient      = containerClient.getBlockBlobClient(blobName);
 
       const now          = new Date();
-      const uploadExpiry = new Date(now.valueOf() + 15 * 60 * 1000);       // 15 min — for upload
-      const shareExpiry  = new Date(now.valueOf() + 3 * 24 * 60 * 60 * 1000); // 3 days — matches lifecycle delete
+      const uploadExpiry = new Date(now.valueOf() + 15 * 60 * 1000);       // 15 minute expiration for upload
+      const shareExpiry  = new Date(now.valueOf() + 3 * 24 * 60 * 60 * 1000); // 3 day expiration matching lifecycle policy
 
-      // Write-only SAS — browser uploads directly to Blob Storage via this URL
+      // Write-only SAS for direct client upload
       const uploadSas = generateBlobSASQueryParameters(
         {
           containerName,
@@ -87,11 +85,7 @@ app.http('getSasUrl', {
 
       const uploadUrl = `${blobClient.url}?${uploadSas.toString()}`;
 
-      // Public share URL — container has Blob-level public read access
-      // UUID prefix makes it effectively unguessable
-      const shareUrl = blobClient.url;
-
-      context.log(`✅ SAS generated | blob: ${blobName} | upload expires: ${uploadExpiry.toISOString()}`);
+      context.log(`SAS generated | blob: ${blobName} | upload expires: ${uploadExpiry.toISOString()}`);
 
       return {
         status: 200,
@@ -101,15 +95,13 @@ app.http('getSasUrl', {
         },
         body: JSON.stringify({
           uploadUrl,
-          shareUrl,
           blobName,
-          originalName: fileName,
           fileType,
           expiresAt: shareExpiry.toISOString(),
         }),
       };
     } catch (error) {
-      context.error('❌ getSasUrl error:', error.message);
+      context.error('getSasUrl error:', error.message);
       return {
         status: 500,
         headers: { 'Content-Type': 'application/json' },

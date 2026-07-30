@@ -3,7 +3,6 @@
  *
  * Fires automatically whenever a new file lands in the pfs-uploads container.
  * Logs file metadata — captured by Application Insights when connected.
- * Demonstrates event-driven serverless architecture.
  *
  * Connection uses identity-based auth (BlobStorageConnection__blobServiceUri app setting).
  */
@@ -21,20 +20,13 @@ app.storageBlob('onFileUploaded', {
     // Strip UUID prefix to get the original display name
     const displayName = blobName.replace(/^[a-f0-9-]{36}-/, '');
 
-    context.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    context.log(`📁 NEW FILE UPLOADED`);
+    context.log(`NEW FILE UPLOADED`);
     context.log(`   Blob Name    : ${blobName}`);
     context.log(`   Display Name : ${displayName}`);
     context.log(`   Size         : ${sizeKb} KB`);
     context.log(`   Timestamp    : ${timestamp}`);
     context.log(`   Auto-delete  : in 3 days (lifecycle policy)`);
-    context.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     // Application Insights will capture these logs automatically.
-    // Future extension points:
-    //   - Generate image thumbnails (for image files)
-    //   - Send email/webhook notification
-    //   - Scan for malware via Azure Defender
-    //   - Index metadata in Cosmos DB for search
   },
 });

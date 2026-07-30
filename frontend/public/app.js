@@ -12,12 +12,12 @@
 
 'use strict';
 
-// ── Config ──────────────────────────────────────────────────────────────────
+// Config
 // When served via the Express proxy, /api routes automatically forward to
 // the Azure Function App. No hardcoded URLs needed.
 const API_BASE = '/api';
 
-// ── DOM References ───────────────────────────────────────────────────────────
+// DOM References
 const dropZone       = document.getElementById('dropZone');
 const fileInput      = document.getElementById('fileInput');
 const uploadProgress = document.getElementById('uploadProgress');
@@ -41,13 +41,12 @@ const uploadAnotherBtn = document.getElementById('uploadAnotherBtn');
 const errorMessage   = document.getElementById('errorMessage');
 const errorDismiss   = document.getElementById('errorDismiss');
 
-const uploadCard         = document.querySelector('.upload-card');
-const heroSection        = document.querySelector('.hero');
+// Error banner logic relies on errorMessage and errorDismiss
 
-// ── State ────────────────────────────────────────────────────────────────────
+// State
 let isUploading = false;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 /** Format bytes to human-readable string */
 function formatBytes(bytes) {
@@ -58,17 +57,7 @@ function formatBytes(bytes) {
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 }
 
-/** Format ISO date to relative string */
-function timeAgo(isoString) {
-  const diff = Date.now() - new Date(isoString).getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours   = Math.floor(diff / 3600000);
-  const days    = Math.floor(diff / 86400000);
-  if (minutes < 1)  return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24)   return `${hours}h ago`;
-  return `${days}d ago`;
-}
+
 
 /** Hours until expiry */
 function hoursUntil(isoString) {
@@ -145,7 +134,7 @@ async function copyToClipboard(text, btn) {
   }
 }
 
-// ── Core Upload Flow ─────────────────────────────────────────────────────────
+// Core Upload Flow
 
 async function handleFile(file) {
   if (!file || isUploading) return;
@@ -172,7 +161,7 @@ async function handleFile(file) {
   showPanel(uploadProgress);
 
   try {
-    // ── Step 1: Get SAS URL from Azure Function ──────────────────────────
+    // Step 1: Request SAS URL from backend
     const params = new URLSearchParams({
       fileName: file.name,
       fileType: file.type || 'application/octet-stream',
@@ -184,14 +173,14 @@ async function handleFile(file) {
       throw new Error(err.error || `HTTP ${sasRes.status}`);
     }
 
-    const { uploadUrl, shareUrl, originalName, expiresAt, blobName } = await sasRes.json();
+    const { uploadUrl, expiresAt, blobName } = await sasRes.json();
 
     setProgress(5, 'Uploading securely…');
 
-    // ── Step 2: Upload file directly to Blob Storage via SAS URL ────────
+    // Step 2: Upload file directly to Blob Storage via SAS URL
     await uploadWithProgress(file, uploadUrl);
 
-    // ── Step 3: Show Success UI ─────────────────────────────────────────
+    // Step 3: Show Success UI
     const hoursLeft = hoursUntil(expiresAt);
     
     const maskedLink = `${window.location.origin}/d/${blobName}`;
@@ -213,7 +202,7 @@ async function handleFile(file) {
 
 /**
  * Upload file to Azure Blob Storage using XHR for real-time progress.
- * Direct upload via SAS URL — bypasses the function for large files.
+ * Direct upload via SAS URL to bypass serverless function for large files.
  */
 function uploadWithProgress(file, sasUrl) {
   return new Promise((resolve, reject) => {
@@ -260,13 +249,10 @@ function resetUploadUI() {
   fileInput.value = '';
 }
 
-// ── Preview & Download ───────────────────────────────────────────────────────
-// Removed as per user request to auto-download via raw Azure URL.
+// Event Listeners
 
-// ── Event Listeners ──────────────────────────────────────────────────────────
-
-// Drop Zone — click
-dropZone.addEventListener('click', () => fileInput.click());
+// Drop Zone — click handled natively by the absolute positioned file input overlay.
+// We only need to handle keyboard events for accessibility.
 dropZone.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
 });
@@ -313,4 +299,4 @@ uploadAnotherBtn.addEventListener('click', () => {
 // Dismiss error
 errorDismiss.addEventListener('click', hideError);
 
-// ── Initialise ───────────────────────────────────────────────────────────────
+// Initialise

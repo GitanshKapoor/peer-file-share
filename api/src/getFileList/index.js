@@ -59,7 +59,7 @@ app.http('getFileList', {
 
       files.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      context.log(`📋 Listed ${files.length} file(s) from ${containerName}`);
+      context.log(`Listed ${files.length} file(s) from ${containerName}`);
 
       return {
         status: 200,
@@ -70,7 +70,7 @@ app.http('getFileList', {
         body: JSON.stringify({ files, count: files.length }),
       };
     } catch (error) {
-      context.error('❌ getFileList error:', error.message);
+      context.error('getFileList error:', error.message);
       return {
         status: 500,
         headers: { 'Content-Type': 'application/json' },

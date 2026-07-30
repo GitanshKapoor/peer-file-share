@@ -1,9 +1,6 @@
-# ============================================================
-# PFS — App Service Plan, App Service + Staging Slot,
-#        Function App (Consumption Plan)
-# ============================================================
+# App Service Plan, App Service, Staging Slot, and Function App
 
-# ── App Service Plan (Standard S1 — required for slots) ─────
+# App Service Plan
 resource "azurerm_service_plan" "main" {
   name                = "pfs-plan-${local.suffix}"
   resource_group_name = data.azurerm_resource_group.main.name
@@ -14,7 +11,7 @@ resource "azurerm_service_plan" "main" {
   tags = local.common_tags
 }
 
-# ── Separate Consumption Plan for Functions ──────────────────
+# Consumption Plan for Functions
 # Functions run on a Consumption (Serverless) plan — scales to zero
 resource "azurerm_service_plan" "functions" {
   name                = "pfs-func-plan-${local.suffix}"
@@ -26,7 +23,7 @@ resource "azurerm_service_plan" "functions" {
   tags = local.common_tags
 }
 
-# ── App Service (Production Slot / Blue) ─────────────────────
+# App Service (Production)
 resource "azurerm_linux_web_app" "main" {
   name                = local.app_service_name
   resource_group_name = data.azurerm_resource_group.main.name
@@ -80,14 +77,14 @@ resource "azurerm_linux_web_app" "main" {
   tags = local.common_tags
 }
 
-# ── Staging Slot (Green — where you deploy before swapping) ──
+# Staging Slot
 resource "azurerm_linux_web_app_slot" "staging" {
   name           = "staging"
   app_service_id = azurerm_linux_web_app.main.id
   https_only     = true
 
   site_config {
-    always_on                         = false     # Off = saves cost on staging
+    always_on                         = false     # Disabled for staging environment
     health_check_path                 = "/health"
     health_check_eviction_time_in_min = 5
 
@@ -123,25 +120,22 @@ resource "azurerm_linux_web_app_slot" "staging" {
   tags = local.common_tags
 }
 
-# ── Azure Function App ────────────────────────────────────────
+# Azure Function App
 resource "azurerm_linux_function_app" "main" {
   name                = local.function_app_name
   resource_group_name = data.azurerm_resource_group.main.name
   location            = data.azurerm_resource_group.main.location
   
-  # IMPORTANT: Linux Consumption (Y1) does not support custom Docker containers.
-  # We must use the Dedicated App Service Plan (S1) which we are already running for the frontend.
+  # Custom Docker container hosting requires App Service Plan.
   service_plan_id     = azurerm_service_plan.main.id
   
   https_only          = true
 
-  # AzureWebJobsStorage: Functions runtime uses this for its own internal state
-  # (trigger leases, logs). This is NOT the user-data blob — that uses Managed Identity.
+  # Internal storage account used by Functions runtime for state and logs.
   storage_account_name       = azurerm_storage_account.main.name
   storage_account_access_key = azurerm_storage_account.main.primary_access_key
 
-  # System-Assigned Managed Identity — how the Function accesses pfs-uploads
-  # without any connection strings. RBAC roles assigned in identity.tf.
+  # Managed identity for secure blob storage access.
   identity {
     type = "SystemAssigned"
   }
@@ -165,8 +159,7 @@ resource "azurerm_linux_function_app" "main" {
   }
 
   app_settings = {
-    # Storage access via account key (lab workaround — RBAC not available)
-    # In production with Owner access: use Managed Identity + role assignments in identity.tf
+    # Storage access configuration
     "AZURE_STORAGE_ACCOUNT_NAME"            = azurerm_storage_account.main.name
     "AZURE_STORAGE_ACCOUNT_KEY"             = azurerm_storage_account.main.primary_access_key
     "AZURE_STORAGE_CONTAINER_NAME"          = azurerm_storage_container.uploads.name

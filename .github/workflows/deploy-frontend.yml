@@ -15,9 +15,8 @@ env:
   IMAGE_NAME:       pfs-frontend
 
 jobs:
-  # ── Build & Push Docker Image ──────────────────────────────
   build-and-push:
-    name: Build & Push Container 🐳
+    name: Build & Push Container
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.meta.outputs.version }}
@@ -48,9 +47,8 @@ jobs:
           cache-from: type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
           cache-to: type=inline
 
-  # ── Deploy to Staging Slot ────────────────────────────────
   deploy-staging:
-    name: Deploy → Staging 🟢
+    name: Deploy to Staging
     needs: build-and-push
     runs-on: ubuntu-latest
     environment: staging
@@ -72,9 +70,8 @@ jobs:
             --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
             --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
 
-  # ── Smoke Test ────────────────────────────────────────────
   smoke-test:
-    name: Smoke Test 🧪
+    name: Smoke Test
     needs: deploy-staging
     runs-on: ubuntu-latest
     steps:
@@ -87,12 +84,12 @@ jobs:
           for i in {1..30}; do
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || true)
             if [ "$HTTP_STATUS" = "200" ]; then
-              echo "✅ Health check passed! Container is fully online."
+              echo "Health check passed! Container is fully online."
               exit 0
             fi
             echo "Attempt $i/30: HTTP $HTTP_STATUS - waiting 10s..."
             sleep 10
           done
           
-          echo "❌ Health check failed after 5 minutes. The container might be crashing on startup."
+          echo "Health check failed after 5 minutes. The container might be crashing on startup."
           exit 1

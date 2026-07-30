@@ -16,13 +16,21 @@
 const express = require('express');
 const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const helmet = require('helmet');
 
 const server = express();
+
+// Security Headers
+server.use(
+  helmet({
+    contentSecurityPolicy: false, // CSP can break the frontend without proper config, disable for now
+  })
+);
 const PORT = process.env.PORT || 8080;
 const FUNCTION_URL = process.env.AZURE_FUNCTION_URL;
 const FUNCTION_KEY = process.env.FUNCTION_KEY;
 
-// ─── Health Check ────────────────────────────────────────────────────────────
+// Health Check
 // Used by CI/CD pipeline to validate staging slot before blue-green swap
 server.get('/health', (req, res) => {
   res.json({
@@ -34,7 +42,7 @@ server.get('/health', (req, res) => {
   });
 });
 
-// ─── API Proxy ────────────────────────────────────────────────────────────────
+// API Proxy
 // Forwards /api/* → Azure Function App
 // Adds the function host key header so the Function can be protected
 if (FUNCTION_URL) {
@@ -58,10 +66,10 @@ if (FUNCTION_URL) {
     })
   );
 } else {
-  console.warn('⚠️  AZURE_FUNCTION_URL not set — API proxy disabled. Set it to the Function App URL.');
+  console.warn('AZURE_FUNCTION_URL not set. API proxy disabled.');
 }
 
-// ─── Download Redirect (Masked Link) ──────────────────────────────────────────
+// Download Redirect (Masked Link)
 // Masks the Azure Blob URL (e.g. /d/<uuid>) and redirects to the raw SAS URL
 server.get('/d/:fileId', async (req, res) => {
   if (!FUNCTION_URL) return res.status(500).send('API URL not configured');
@@ -84,7 +92,7 @@ server.get('/d/:fileId', async (req, res) => {
   }
 });
 
-// ─── Static Frontend ──────────────────────────────────────────────────────────
+// Static Frontend
 server.use(express.static(path.join(__dirname, 'public')));
 
 // SPA fallback
@@ -92,9 +100,9 @@ server.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ─── Start ────────────────────────────────────────────────────────────────────
+// Start
 server.listen(PORT, () => {
-  console.log(`🚀 PFS frontend running on http://localhost:${PORT}`);
+  console.log(`PFS frontend running on http://localhost:${PORT}`);
   console.log(`   API proxy → ${FUNCTION_URL || '(disabled — set AZURE_FUNCTION_URL)'}`);
   console.log(`   Environment: ${process.env.ENVIRONMENT || 'development'}`);
 });

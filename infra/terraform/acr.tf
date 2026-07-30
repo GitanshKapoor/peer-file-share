@@ -1,23 +1,20 @@
-# ============================================================
-# PFS — Azure Container Registry (ACR)
+# Azure Container Registry (ACR)
 # Stores Docker images for the frontend and API.
-# CI/CD builds images and pushes here → App Service/Functions pull from here.
-# ============================================================
+# CI/CD builds images and pushes here; App Service/Functions pull from here.
 
 resource "azurerm_container_registry" "main" {
   name                = "pfsacr${local.suffix}"   # must be globally unique, alphanumeric only
   resource_group_name = data.azurerm_resource_group.main.name
   location            = data.azurerm_resource_group.main.location
-  sku                 = "Basic"    # Basic = cheapest, good for dev/lab
+  sku                 = "Basic"    # Basic tier
   admin_enabled       = true       # Enables username/password login for App Service
 
   tags = local.common_tags
 }
 
-# ── Allow App Service to pull from ACR ────────────────────────
+# Allow App Service to pull from ACR
 # App Service needs AcrPull role to pull images from ACR
-# (Commented out — lab accounts can't assign roles.
-#  In production, uncomment this and set admin_enabled = false)
+# Role assignment for AcrPull when managed identity is enabled.
 #
 # resource "azurerm_role_assignment" "app_acr_pull" {
 #   scope                = azurerm_container_registry.main.id

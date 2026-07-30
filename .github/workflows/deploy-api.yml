@@ -59,4 +59,4 @@ jobs:
             --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
             --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
 
-          echo "✅ API container deployed: ${{ env.FUNCTION_APP_NAME }}"
+          echo "API container deployed: ${{ env.FUNCTION_APP_NAME }}"

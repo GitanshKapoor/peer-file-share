@@ -1,7 +1,4 @@
-# ============================================================
-# PFS — Peer File Share · Terraform
 # Provider & Terraform configuration
-# ============================================================
 
 terraform {
   required_version = ">= 1.6.0"
@@ -17,7 +14,7 @@ terraform {
     }
   }
 
-  # Uncomment to store state in Azure Blob Storage (recommended for teams)
+  # Remote backend configuration
   # backend "azurerm" {
   #   resource_group_name  = "pfs-tfstate-rg"
   #   storage_account_name = "pfstfstate"
@@ -27,8 +24,7 @@ terraform {
 }
 
 provider "azurerm" {
-  # Lab environments don't have permission to register Resource Providers
-  # at the subscription level — disabling auto-registration fixes this
+  # Disable provider registration for restricted subscriptions
   resource_provider_registrations = "none"
 
   features {
@@ -38,21 +34,19 @@ provider "azurerm" {
   }
 }
 
-# ── Resource Group (EXISTING — read only, not created by Terraform) ──────
-# Uses your pre-existing lab resource group instead of creating a new one.
-# Set resource_group_name in terraform.tfvars to match your existing RG.
+# Data source for existing Resource Group.
 data "azurerm_resource_group" "main" {
   name = var.resource_group_name
 }
 
-# ── Random suffix for globally-unique names ──────────────────
+# Random suffix
 resource "random_string" "suffix" {
   length  = 6
   special = false
   upper   = false
 }
 
-# ── Locals ───────────────────────────────────────────────────
+# Locals
 locals {
   suffix = random_string.suffix.result
 

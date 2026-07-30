@@ -1,8 +1,6 @@
-# ============================================================
-# PFS — Azure Storage Account, Container, CORS & Lifecycle
-# ============================================================
+# Azure Storage Account, Container, CORS & Lifecycle
 
-# ── Storage Account ──────────────────────────────────────────
+# Storage Account
 resource "azurerm_storage_account" "main" {
   name                = local.storage_account_name
   resource_group_name = data.azurerm_resource_group.main.name
@@ -35,18 +33,18 @@ resource "azurerm_storage_account" "main" {
   tags = local.common_tags
 }
 
-# ── Blob Container ───────────────────────────────────────────
+# Blob Container
 # Public blob access: individual files are publicly readable by URL
-# The UUID prefix in the blob name makes them effectively unguessable
+# UUID prefix ensures blob uniqueness.
 resource "azurerm_storage_container" "uploads" {
   name                  = var.blob_container_name
   storage_account_id    = azurerm_storage_account.main.id
   container_access_type = "blob" # Public read for individual blobs
 }
 
-# ── Lifecycle Management Policy ──────────────────────────────
+# Lifecycle Management Policy
 # Auto-deletes uploaded files after N days (default: 3)
-# This is pure Azure config — zero application code required
+# Storage lifecycle management policy
 resource "azurerm_storage_management_policy" "lifecycle" {
   storage_account_id = azurerm_storage_account.main.id
 
