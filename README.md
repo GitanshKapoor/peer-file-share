@@ -292,9 +292,9 @@ chmod +x infra/teardown.sh
 
 ---
 
-## Roadmap & Contributing
+## Coming Soon (Future Roadmap)
 
-We welcome open-source contributions! While the core application is fully functional, secure, and performs well, we are actively looking to implement the following enterprise-grade features:
+We are actively working on turning this into a fully enterprise-grade platform. The following features will be added soon. We also welcome open-source contributions!
 
 1. **Malware / Virus Scanning:** Add an Azure Event Grid trigger that invokes a ClamAV container to scan blobs as soon as they land in `pfs-uploads`, quarantining infected files.
 2. **Rate Limiting & DDoS Protection:** Add `express-rate-limit` middleware on the frontend proxy and integrate Azure API Management (APIM) in front of the Azure Functions.
