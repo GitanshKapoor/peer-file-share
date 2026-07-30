@@ -135,7 +135,19 @@ The setup guide covers:
 
 ---
 
-## 🛣️ Future Roadmap
+## 💰 Azure Cost Estimate (approximate)
+
+| Resource | Tier | Est. Monthly |
+|---|---|---|
+| App Service Plan | Standard S1 | ~$73/mo |
+| Azure Functions | Consumption (first 1M calls free) | ~$0 |
+| Blob Storage | LRS Standard | ~$0.02/GB |
+| **Total** | | **~$73/mo** |
+
+> Note: The S1 App Service tier is required to support the blue-green deployment slots. If you do not need staging slots, you can downgrade to **Basic B1** to save ~$45/mo.
+
+---
+
 
 This architecture lays the foundation for a fully enterprise-grade platform. Planned integrations include:
 
