@@ -194,7 +194,8 @@ async function handleFile(file) {
     // ── Step 3: Show Success UI ─────────────────────────────────────────
     const hoursLeft = hoursUntil(expiresAt);
     
-    shareLinkInput.value = shareUrl;
+    const maskedLink = `${window.location.origin}/d/${blobName}`;
+    shareLinkInput.value = maskedLink;
     successExpiry.textContent = hoursLeft > 48
       ? `Link expires in ${Math.floor(hoursLeft / 24)} days`
       : `Link expires in ${hoursLeft} hours`;

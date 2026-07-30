@@ -61,6 +61,29 @@ if (FUNCTION_URL) {
   console.warn('⚠️  AZURE_FUNCTION_URL not set — API proxy disabled. Set it to the Function App URL.');
 }
 
+// ─── Download Redirect (Masked Link) ──────────────────────────────────────────
+// Masks the Azure Blob URL (e.g. /d/<uuid>) and redirects to the raw SAS URL
+server.get('/d/:fileId', async (req, res) => {
+  if (!FUNCTION_URL) return res.status(500).send('API URL not configured');
+  try {
+    const apiRes = await fetch(`${FUNCTION_URL}/api/getFileList`);
+    if (!apiRes.ok) throw new Error('Backend API failed to respond');
+    
+    const data = await apiRes.json();
+    const file = data.files?.find(f => f.blobName === req.params.fileId);
+    
+    if (file && file.shareUrl) {
+      // 302 Redirect causes browser to navigate to Blob URL (which forces download via Content-Disposition)
+      res.redirect(302, file.shareUrl);
+    } else {
+      res.status(404).send('File not found or link has expired.');
+    }
+  } catch (err) {
+    console.error('Download redirect error:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 // ─── Static Frontend ──────────────────────────────────────────────────────────
 server.use(express.static(path.join(__dirname, 'public')));
 
