@@ -128,7 +128,11 @@ resource "azurerm_linux_function_app" "main" {
   name                = local.function_app_name
   resource_group_name = data.azurerm_resource_group.main.name
   location            = data.azurerm_resource_group.main.location
-  service_plan_id     = azurerm_service_plan.functions.id
+  
+  # IMPORTANT: Linux Consumption (Y1) does not support custom Docker containers.
+  # We must use the Dedicated App Service Plan (S1) which we are already running for the frontend.
+  service_plan_id     = azurerm_service_plan.main.id
+  
   https_only          = true
 
   # AzureWebJobsStorage: Functions runtime uses this for its own internal state
@@ -170,9 +174,10 @@ resource "azurerm_linux_function_app" "main" {
     "ALLOWED_ORIGIN"                        = "https://${azurerm_linux_web_app.main.default_hostname}"
 
     # Functions runtime config
-    "FUNCTIONS_EXTENSION_VERSION"  = "~4"
+    "FUNCTIONS_EXTENSION_VERSION"         = "~4"
+    "FUNCTIONS_WORKER_RUNTIME"            = "node"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
-    "DOCKER_ENABLE_CI"             = "true"
+    "DOCKER_ENABLE_CI"                    = "true"
   }
 
   tags = local.common_tags
