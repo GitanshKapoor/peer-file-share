@@ -20,7 +20,7 @@ By utilizing **Write-Only SAS Tokens**, the frontend client uploads massive 2 GB
 - **Serverless Scalability**: The backend is powered by Azure Functions on a Consumption plan, allowing it to scale instantly from zero to thousands of concurrent requests.
 - **Cost Optimization**: Direct-to-blob uploads mean the backend only processes lightweight JSON metadata requests, dramatically reducing compute execution costs.
 - **Automated Lifecycle Management**: Blob Storage is configured with a strict data retention policy that automatically purges files older than 3 days, eliminating manual database cleanup and runaway storage costs.
-- **Zero-Downtime Releases**: Infrastructure as Code (Terraform) provisions Azure App Service Deployment Slots, enabling automated blue-green deployments via GitHub Actions.
+- **Zero-Downtime Releases & IaC**: Infrastructure as Code (Terraform with secure Remote State in Azure Blob Storage) provisions Azure App Service Deployment Slots, enabling automated blue-green deployments via GitHub Actions.
 
 ---
 

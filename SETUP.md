@@ -7,7 +7,7 @@ This guide contains a complete map of every Azure credential, account name, and 
 
 ## 🗺️ Master Config Map
 
-| Value You Need | Where It Goes | File | Secret? |
+| Value You Need | Where It Goes | File | Secret |
 |---|---|---|---|
 | Storage Account Name | `AZURE_STORAGE_ACCOUNT_NAME` | `api/local.settings.json` | ❌ No |
 | Storage Account URL | `BlobStorageConnection__blobServiceUri` | `api/local.settings.json` | ❌ No |
@@ -61,12 +61,29 @@ az account show --output table
 
 The fastest and most reliable way to create all Azure resources (App Service, Functions, Storage, Roles, and App Settings) is by using the included Terraform configuration.
 
+### Configure Remote State Backend
+
+Terraform uses Azure Blob Storage to securely store its state. You must create this storage account first:
+
+```bash
+# 1. Create a Resource Group for the state file (or use an existing lab group)
+az group create --name "<your-resource-name>" --location eastus
+
+# 2. Create the Storage Account
+az storage account create --name "<backend-name>" --resource-group "<your-resource-name>" --location eastus --sku Standard_LRS
+
+# 3. Create the Storage Container
+az storage container create --name "tfstate" --account-name "fileshareappbackend"
+```
+
+### Provision Resources
+
 ```bash
 cd infra/terraform
 
 # Create terraform.tfvars with your values (or use the defaults)
 cat > terraform.tfvars <<EOF
-resource_group_name  = "pfs-rg"
+resource_group_name  = "<your-resource-name>"
 location             = "eastus"
 environment          = "production"
 app_service_plan_sku = "S1"
