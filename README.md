@@ -154,5 +154,3 @@ This architecture lays the foundation for a fully enterprise-grade platform. Pla
 1. **Malware & Virus Scanning:** Implementing an Azure Event Grid trigger to invoke a ClamAV container, scanning and quarantining infected blobs instantly upon upload.
 2. **Rate Limiting & DDoS Protection:** Integrating Azure API Management (APIM) in front of the Azure Functions to throttle abusive traffic.
 3. **Global CDN (Content Delivery Network):** Implementing Azure Front Door to cache read-heavy blobs globally for ultra-low latency downloads.
-4. **Secret Management:** Moving the remaining App Settings to Azure Key Vault, fetching secrets dynamically at runtime via Managed Identities.
-5. **End-to-End (E2E) Encryption:** Encrypting files locally in the browser using the WebCrypto API before upload, ensuring absolute zero-knowledge storage where the server never sees the plaintext file.
