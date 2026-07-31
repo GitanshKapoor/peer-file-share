@@ -7,7 +7,7 @@ This guide contains a complete map of every Azure credential, account name, and 
 
 ## 🗺️ Master Config Map
 
-| Value You Need | Where It Goes | File | Secret? |
+| Value You Need | Where It Goes | File | Secret |
 |---|---|---|---|
 | Storage Account Name | `AZURE_STORAGE_ACCOUNT_NAME` | `api/local.settings.json` | ❌ No |
 | Storage Account URL | `BlobStorageConnection__blobServiceUri` | `api/local.settings.json` | ❌ No |
