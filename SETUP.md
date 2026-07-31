@@ -67,7 +67,7 @@ Terraform uses Azure Blob Storage to securely store its state. You must create t
 
 ```bash
 # 1. Create a Resource Group for the state file (or use an existing lab group)
-az group create --name "1-86f3d61c-playground-sandbox" --location eastus
+az group create --name "<your-resource-name>" --location eastus
 
 # 2. Create the Storage Account
 az storage account create --name "<backend-name>" --resource-group "<your-resource-name>" --location eastus --sku Standard_LRS
