@@ -70,7 +70,7 @@ Terraform uses Azure Blob Storage to securely store its state. You must create t
 az group create --name "1-86f3d61c-playground-sandbox" --location eastus
 
 # 2. Create the Storage Account
-az storage account create --name "fileshareappbackend" --resource-group "1-86f3d61c-playground-sandbox" --location eastus --sku Standard_LRS
+az storage account create --name "<backend-name>" --resource-group "<your-resource-name>" --location eastus --sku Standard_LRS
 
 # 3. Create the Storage Container
 az storage container create --name "tfstate" --account-name "fileshareappbackend"
@@ -83,7 +83,7 @@ cd infra/terraform
 
 # Create terraform.tfvars with your values (or use the defaults)
 cat > terraform.tfvars <<EOF
-resource_group_name  = "1-86f3d61c-playground-sandbox"
+resource_group_name  = "<your-resource-name>"
 location             = "eastus"
 environment          = "production"
 app_service_plan_sku = "S1"
